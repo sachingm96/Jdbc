@@ -60,12 +60,12 @@ public class CustomerTester {
 		System.out.println("****************************************************");
 		
 		Collection<CustomerDTO> findall = cust.findAll(b -> b.getAddress().equals("bangalore"));
-		findall.forEach(s -> System.out.println(s));//getFrom().endsWith("e")
+		findall.forEach(a -> System.out.println(a));
 		
 		System.out.println("****************************************************");
 		
 		Collection<CustomerDTO> nameDesc = cust.findAllSortNameDesc();
-		nameDesc.forEach(n -> System.out.println(n));
+		nameDesc.forEach(a -> System.out.println(a));
 		
 		System.out.println("****************************************************");
 		
