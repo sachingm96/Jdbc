@@ -29,13 +29,7 @@ public class CustomerDAOImpl implements CustomerDAO {
 			String query = "insert into customer(c_name,c_from,c_to,c_address,c_married,c_passportNo,c_education)values(?,?,?,?,?,?,?)";
 			PreparedStatement prepare = connection.prepareStatement(query, PreparedStatement.RETURN_GENERATED_KEYS);
 			ResultSet rs = prepare.getGeneratedKeys();
-			prepare.setString(1, dto.getName());
-			prepare.setString(2, dto.getFrom());
-			prepare.setString(3, dto.getTo());
-			prepare.setString(4, dto.getAddress());
-			prepare.setBoolean(5, dto.isMarried());
-			prepare.setInt(6, dto.getPassportNo());
-			prepare.setString(7, dto.getEdu().toString());
+			extractedPrepared(dto, prepare);
 			if (rs.next()) {
 				temp = rs.getInt(1);
 			}
@@ -55,37 +49,19 @@ public class CustomerDAOImpl implements CustomerDAO {
 		return temp;
 	}
 
+	private void extractedPrepared(CustomerDTO dto, PreparedStatement prepare) throws SQLException {
+		prepare.setString(1, dto.getName());
+		prepare.setString(2, dto.getFrom());
+		prepare.setString(3, dto.getTo());
+		prepare.setString(4, dto.getAddress());
+		prepare.setBoolean(5, dto.isMarried());
+		prepare.setInt(6, dto.getPassportNo());
+		prepare.setString(7, dto.getEdu().toString());
+	}
+
 	@Override
 	public void saveAll(Collection<CustomerDTO> collection) {
-		Connection tempConnection = null;
-		try (Connection connection = DriverManager.getConnection(URL, USERNAME, PASSWORD)) {
-			tempConnection = connection;
-			connection.setAutoCommit(false);
-			String query = "insert into customer(c_name,c_from,c_to,c_address,c_married,c_passportNo,c_education)values(?,?,?,?,?,?,?)";
-			PreparedStatement prepare = connection.prepareStatement(query, PreparedStatement.RETURN_GENERATED_KEYS);
-			collection.forEach(dto -> {
-				try {
-					prepare.setString(1, dto.getName());
-					prepare.setString(2, dto.getFrom());
-					prepare.setString(3, dto.getTo());
-					prepare.setString(4, dto.getAddress());
-					prepare.setBoolean(5, dto.isMarried());
-					prepare.setInt(6, dto.getPassportNo());
-					prepare.setString(7, dto.getEdu().toString());
-					prepare.execute();
-					System.out.println(dto);
-				} catch (Exception e) {
-				}
-			});
-			connection.commit();
-		} catch (SQLException e) {
-			e.printStackTrace();
-			try {
-				tempConnection.rollback();
-			} catch (SQLException e1) {
-				e1.printStackTrace();
-			}
-		}
+		collection.stream().forEach(dto->save(dto));
 	}
 
 	@Override
@@ -100,7 +76,7 @@ public class CustomerDAOImpl implements CustomerDAO {
 				CustomerDTO dto = createValuesFromResultSet(result);
 				if (predicate.test(dto)) {
 					optional = Optional.of(dto);
-					break;
+				
 				}
 			}
 		} catch (SQLException e) {
@@ -120,7 +96,6 @@ public class CustomerDAOImpl implements CustomerDAO {
 			ResultSet result = prepare.executeQuery();
 
 			while (result.next()) {
-				int id = result.getInt("c_id");
 				CustomerDTO dto = createValuesFromResultSet(result);
 				collection.add(dto);
 
@@ -142,7 +117,9 @@ public class CustomerDAOImpl implements CustomerDAO {
 
 			while (result.next()) {
 				CustomerDTO dto = createValuesFromResultSet(result);
-				collection.add(dto);
+				if (predicate.test(dto)) {
+					collection.add(dto);
+				}
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();

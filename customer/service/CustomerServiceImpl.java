@@ -93,10 +93,14 @@ public class CustomerServiceImpl implements CustomerService {
 
 	@Override
 	public void saveAll(Collection<CustomerDTO> collection) {
-		dao.saveAll(collection);
+		if (!collection.isEmpty()) {
+			collection.forEach(dto -> {
+				this.save(dto);
+			});
+		}
 
 	}
-
+	
 	@Override
 	public Optional<CustomerDTO> findOne(Predicate<CustomerDTO> predicate) {
 		return dao.findOne(predicate);
